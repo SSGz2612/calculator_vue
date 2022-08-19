@@ -1,28 +1,28 @@
 <template>
   <div>
-    <h1>{{ msg }}</h1>
+    <h3>{{ msg }}</h3>
     
     <div class="container">
-      <div class="container__display">{{ User.data || 0 }}</div>
-      <div class="box bg-gray">AC</div>
+      <div class="container__display">{{ Value || 0 }}</div>
+      <div @click="clean" class="box bg-gray">C</div>
       <div class="box bg-gray">+/-</div>
-      <div class="box bg-gray">%</div>
-      <div class="box bg-orange">/</div>
-      <div class="box bg-h">7</div>
-      <div class="box bg-h">8</div>
-      <div class="box bg-h">9</div>
-      <div class="box bg-orange">x</div>
-      <div class="box bg-h">4</div>
-      <div class="box bg-h">5</div>
-      <div class="box bg-h">6</div>
-      <div class="box bg-orange">-</div>
-      <div class="box bg-h">1</div>
-      <div class="box bg-h">2</div>
-      <div class="box bg-h">3</div>
-      <div class="box bg-orange">+</div>
-      <div class="box bg-h sizezero">0</div>
-      <div class="box bg-h">.</div>
-      <div class="box bg-orange">=</div>
+      <div @click="percent" class="box bg-gray">%</div>
+      <div @click="divide" class="box bg-orange">/</div>
+      <div @click="digits('7')" class="box bg-h">7</div>
+      <div @click="digits('8')" class="box bg-h">8</div>
+      <div @click="digits('9')" class="box bg-h">9</div>
+      <div @click="multiply" class="box bg-orange">x</div>
+      <div @click="digits('4')" class="box bg-h">4</div>
+      <div @click="digits('5')" class="box bg-h">5</div>
+      <div @click="digits('6')" class="box bg-h">6</div>
+      <div @click="minus" class="box bg-orange">-</div>
+      <div @click="digits('1')" class="box bg-h">1</div>
+      <div @click="digits('2')" class="box bg-h">2</div>
+      <div @click="digits('3')" class="box bg-h">3</div>
+      <div @click="addition" class="box bg-orange">+</div>
+      <div @click="digits('0')" class="box bg-h sizezero">0</div>
+      <div @click="dot" class="box bg-h">.</div>
+      <div @click="equal(addition)" class="box bg-orange">=</div>
     </div>
 
     <div class="container">
@@ -38,21 +38,64 @@ import axios from "axios";
 export default {
   name: 'CalculatorUndoRedo',
   props: { msg: String },
- data() {
-  return {
-    User: {},
-  }
- },
+  data() {
+    return {
+      Value: 0,
+      firstValue: 0,
+      currentValue: 0
+    }
+  },
   mounted(){
     axios.get('http://localhost:4000/')
     .then((res) => {
-      console.log(res.data);
-      this.User = res.data;
+      this.Value = res.data[0].dt;
+      console.log(res.data[0].dt);
     })
     .catch((e) => {
       console.log(e);
-    })
+    });
   },
+  methods: {
+    clean(){ this.Value = ""; },
+    
+    digits(n){
+      this.Value = this.Value + n;
+      this.firstValue = this.Value;
+
+      axios.post('http://localhost:4000/', { "id": 5, "dt": n })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    },
+
+    percent(){},
+    dot(){
+      if(this.Value.indexOf(".") === -1){
+        this.Value += ".";
+      }
+    },
+
+    divide(){},
+    multiply(){},
+    minus(){},
+    
+    addition(){
+    },
+
+    equal(v){
+      
+      axios.post('http://localhost:4000/', { "id": 5, "data": v })
+      .then((res) => {
+        res.data;
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    }
+  }
 }
 </script>
 
