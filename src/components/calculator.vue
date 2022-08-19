@@ -3,11 +3,12 @@
     <h3>{{ msg }}</h3>
     
     <div class="container">
+      <div class="container__operator">{{ operator }}</div>
       <div class="container__display">{{ Value || 0 }}</div>
       <div @click="cleanAll" class="box bg-red">AC</div>
       <div @click="clean" class="box bg-gray">C</div>
       <div @click="percent" class="box bg-gray">%</div>
-      <div @click="divide" class="box bg-orange">/</div>
+      <div @click="divide" class="box bg-gray">/</div>
       <div @click="digits('7')" class="box bg-h">7</div>
       <div @click="digits('8')" class="box bg-h">8</div>
       <div @click="digits('9')" class="box bg-h">9</div>
@@ -40,14 +41,13 @@ export default {
   props: { msg: String },
   data() {
     return {
+      PrincipalValue: "0",
       Value: '0',
-      lastValue: null,
-      currentValue: null,
+      currentValue: '0',
       operator: "",
       checkOperator: false,
       // id json
       generateId: 0,
-      currentId: 0,
       // redo undo
       counter: 0
     }
@@ -55,7 +55,7 @@ export default {
   mounted(){
     axios.get('http://localhost:4000/')
     .then((res) => {
-      this.currentId = res.data.info[this.generateId].id;
+      this.generateId = res.data.info[this.generateId].id;
       this.Value = res.data.info[0].dt;
     })
     .catch((e) => {
@@ -63,38 +63,36 @@ export default {
     });
   },
   methods: {
-    cleanAll(){ this.Value = ""; },
+    cleanAll(){
+      this.Value = "0";
+      this.PrincipalValue = "0"
+      this.operator = "";
+    },
+
     clean(){
       let v = this.Value;
       this.Value = v.slice(0, -1);
       this.currentValue = this.Value;
+      this.operator = "";
     },
 
     digits(n){
       if(this.checkOperator){
         this.Value = "";
+        this.checkOperator = false;
       }
 
       if(this.Value[0] === "0"){
         this.Value = n;
-        
-        this.currentValue = this.Value;
-        this.checkOperator = false;
-
-        console.log("value: " + this.Value);
-        console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
       } else {
         this.Value = this.Value + n;
-
-        this.currentValue = this.Value;
-        this.checkOperator = false;
-
-        console.log("value: " + this.Value);
-        console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
       }
     },
 
-    percent(){},
+    percent(){
+      this.Value = parseFloat(this.currentValue) / 100;
+    },
+
     dot(){
       if(this.Value.indexOf(".") === -1){
         this.Value += ".";
@@ -102,63 +100,39 @@ export default {
     },
 
     divide(){
-      this.lastValue = this.currentValue;
-      this.currentValue = null;
+      this.currentValue = this.Value;
       this.operator = "/";
       this.checkOperator = true;
-
-      console.log("value: " + this.Value);
-      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
     },
 
     multiply(){
-      this.lastValue = this.currentValue;
-      this.currentValue = null;
+      this.currentValue = this.Value;
       this.operator = "*";
       this.checkOperator = true;
-
-      console.log("value: " + this.Value);
-      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
     },
 
     minus(){
-      this.lastValue = this.currentValue;
-      this.currentValue = null;
+      this.currentValue = this.Value;
       this.operator = "-";
       this.checkOperator = true;
-
-      console.log("value: " + this.Value);
-      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
     },
     
     addition(){
-      this.lastValue = this.currentValue;
-      this.currentValue = null;
+      this.currentValue = this.Value;
       this.operator = "+";
       this.checkOperator = true;
 
-      console.log("value: " + this.Value);
-      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+      // console.log("value: " + this.Value);
+      // console.log("Principal: " + this.PrincipalValue + " " + "current: " + this.currentValue);
     },
 
     equal(){
       switch(this.operator){
         case "+":
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
-
-          if(this.lastValue === null){
-            this.Value = String(parseFloat(this.Value) + parseFloat(this.currentValue));
-          } else {
-            if(this.currentValue === null){
-              this.currentValue = "0";
-            }
-            this.Value = String(parseFloat(this.currentValue) + parseFloat(this.lastValue));
-          }
-
-          if(this.generateId === this.currentId){
-            this.generateId += 1;
-          }
+          this.PrincipalValue = String(parseFloat(this.currentValue) + parseFloat(this.Value));
+          this.Value = String(parseFloat(this.currentValue) + parseFloat(this.Value));
+          
+          this.generateId += 1;
           axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
           .then((res) => {
             res.data;
@@ -167,30 +141,15 @@ export default {
             console.log(e);
           });
 
-          this.lastValue = null;
-          this.currentValue = parseFloat(this.currentValue);
+          this.operator = "";
           this.checkOperator = false;
-
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
         break;
         
         case "-":
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
-
-          if(this.lastValue === null){
-            this.Value = String(parseFloat(this.Value) - parseFloat(this.currentValue));
-          } else {
-            if(this.currentValue === null){
-              this.currentValue = "0";
-            }
-            this.Value = String(parseFloat(this.currentValue) - parseFloat(this.lastValue));
-          }
-
-          if(this.generateId === this.currentId){
-            this.generateId += 1;
-          }
+          this.PrincipalValue = String(parseFloat(this.currentValue) - parseFloat(this.Value));
+          this.Value = String(parseFloat(this.currentValue) - parseFloat(this.Value));
+          
+          this.generateId += 1;
           axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
           .then((res) => {
             res.data;
@@ -199,30 +158,15 @@ export default {
             console.log(e);
           });
 
-          this.lastValue = null;
-          this.currentValue = parseFloat(this.currentValue);
+          this.operator = "";
           this.checkOperator = false;
-
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
         break;
 
         case "*":
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
-
-          if(this.lastValue === null){
-            this.Value = String(parseFloat(this.Value) * parseFloat(this.currentValue));
-          } else {
-            if(this.currentValue === null){
-              this.currentValue = "0";
-            }
-            this.Value = String(parseFloat(this.currentValue) * parseFloat(this.lastValue));
-          }
-
-          if(this.generateId === this.currentId){
-            this.generateId += 1;
-          }
+          this.PrincipalValue = String(parseFloat(this.currentValue) * parseFloat(this.Value));
+          this.Value = String(parseFloat(this.currentValue) * parseFloat(this.Value));
+          
+          this.generateId += 1;
           axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
           .then((res) => {
             res.data;
@@ -231,30 +175,15 @@ export default {
             console.log(e);
           });
 
-          this.lastValue = null;
-          this.currentValue = parseFloat(this.currentValue);
+          this.operator = "";
           this.checkOperator = false;
-
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
         break;
 
         case "/":
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
-
-          if(this.lastValue === null){
-            this.Value = String(parseFloat(this.Value) / parseFloat(this.currentValue));
-          } else {
-            if(this.currentValue === null){
-              this.currentValue = "0";
-            }
-            this.Value = String(parseFloat(this.currentValue) / parseFloat(this.lastValue));
-          }
-
-          if(this.generateId === this.currentId){
-            this.generateId += 1;
-          }
+          this.PrincipalValue = String(parseFloat(this.currentValue) / parseFloat(this.Value));
+          this.Value = String(parseFloat(this.currentValue) / parseFloat(this.Value));
+          
+          this.generateId += 1;
           axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
           .then((res) => {
             res.data;
@@ -263,12 +192,8 @@ export default {
             console.log(e);
           });
 
-          this.lastValue = null;
-          this.currentValue = parseFloat(this.currentValue);
+          this.operator = "";
           this.checkOperator = false;
-
-          console.log("value: " + this.Value);
-          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
         break;
       }
     },
@@ -276,12 +201,12 @@ export default {
     undo(){
       axios.get('http://localhost:4000/')
       .then((res) => {
-        if(this.counter >= 0){
+        if(this.counter > 0){
           this.counter -= 1
           this.Value = res.data.info[this.counter].dt;
+        } else {
+          console.log("nothing more");
         }
-
-        console.log("nothing more");
       })
       .catch((e) => {
         console.log(e);
@@ -291,9 +216,11 @@ export default {
     redo(){
       axios.get('http://localhost:4000/')
       .then((res) => {
-        if(this.counter <= res.data.info.length){
+        if(this.counter < res.data.info.length - 1){
           this.counter += 1
           this.Value = res.data.info[this.counter].dt;
+        } else {
+          console.log("nothing more");
         }
       })
       .catch((e) => {
@@ -326,9 +253,22 @@ export default {
   font-size: 20px;
   padding: 0 20px;
   color: #fff;
-  grid-column: 1/5;
+  grid-column: 2/5;
   height: 70px;
-  border-radius: 5px 5px 0 0;
+  border-radius: 0 5px 0 0;
+}
+
+.container__operator {
+  display: grid;
+  background-color: #555;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 20px;
+  padding: 0 20px;
+  color: #fff;
+  grid-column: 1/2;
+  height: 70px;
+  border-radius: 5px 0 0 0;
 }
 
 .box {
