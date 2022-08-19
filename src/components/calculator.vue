@@ -4,8 +4,8 @@
     
     <div class="container">
       <div class="container__display">{{ Value || 0 }}</div>
+      <div @click="cleanAll" class="box bg-red">AC</div>
       <div @click="clean" class="box bg-gray">C</div>
-      <div class="box bg-gray">+/-</div>
       <div @click="percent" class="box bg-gray">%</div>
       <div @click="divide" class="box bg-orange">/</div>
       <div @click="digits('7')" class="box bg-h">7</div>
@@ -26,8 +26,8 @@
     </div>
 
     <div class="container">
-      <div class="box bg-gray sizezero">Undo</div>
-      <div class="box bg-orange sizezero-2">Redo</div>
+      <div @click="undo" class="box bg-blue sizezero">Undo</div>
+      <div @click="redo" class="box bg-orange sizezero-2">Redo</div>
     </div>
   </div>
 </template>
@@ -40,35 +40,58 @@ export default {
   props: { msg: String },
   data() {
     return {
-      Value: 0,
-      firstValue: 0,
-      currentValue: 0
+      Value: '0',
+      lastValue: null,
+      currentValue: null,
+      operator: "",
+      checkOperator: false,
+      // id json
+      generateId: 0,
+      currentId: 0,
+      // redo undo
+      counter: 0
     }
   },
   mounted(){
     axios.get('http://localhost:4000/')
     .then((res) => {
-      this.Value = res.data[0].dt;
-      console.log(res.data[0].dt);
+      this.currentId = res.data.info[this.generateId].id;
+      this.Value = res.data.info[0].dt;
     })
     .catch((e) => {
       console.log(e);
     });
   },
   methods: {
-    clean(){ this.Value = ""; },
-    
-    digits(n){
-      this.Value = this.Value + n;
-      this.firstValue = this.Value;
+    cleanAll(){ this.Value = ""; },
+    clean(){
+      let v = this.Value;
+      this.Value = v.slice(0, -1);
+      this.currentValue = this.Value;
+    },
 
-      axios.post('http://localhost:4000/', { "id": 5, "dt": n })
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    digits(n){
+      if(this.checkOperator){
+        this.Value = "";
+      }
+
+      if(this.Value[0] === "0"){
+        this.Value = n;
+        
+        this.currentValue = this.Value;
+        this.checkOperator = false;
+
+        console.log("value: " + this.Value);
+        console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+      } else {
+        this.Value = this.Value + n;
+
+        this.currentValue = this.Value;
+        this.checkOperator = false;
+
+        console.log("value: " + this.Value);
+        console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+      }
     },
 
     percent(){},
@@ -78,18 +101,200 @@ export default {
       }
     },
 
-    divide(){},
-    multiply(){},
-    minus(){},
-    
-    addition(){
+    divide(){
+      this.lastValue = this.currentValue;
+      this.currentValue = null;
+      this.operator = "/";
+      this.checkOperator = true;
+
+      console.log("value: " + this.Value);
+      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
     },
 
-    equal(v){
-      
-      axios.post('http://localhost:4000/', { "id": 5, "data": v })
+    multiply(){
+      this.lastValue = this.currentValue;
+      this.currentValue = null;
+      this.operator = "*";
+      this.checkOperator = true;
+
+      console.log("value: " + this.Value);
+      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+    },
+
+    minus(){
+      this.lastValue = this.currentValue;
+      this.currentValue = null;
+      this.operator = "-";
+      this.checkOperator = true;
+
+      console.log("value: " + this.Value);
+      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+    },
+    
+    addition(){
+      this.lastValue = this.currentValue;
+      this.currentValue = null;
+      this.operator = "+";
+      this.checkOperator = true;
+
+      console.log("value: " + this.Value);
+      console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+    },
+
+    equal(){
+      switch(this.operator){
+        case "+":
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+
+          if(this.lastValue === null){
+            this.Value = String(parseFloat(this.Value) + parseFloat(this.currentValue));
+          } else {
+            if(this.currentValue === null){
+              this.currentValue = "0";
+            }
+            this.Value = String(parseFloat(this.currentValue) + parseFloat(this.lastValue));
+          }
+
+          if(this.generateId === this.currentId){
+            this.generateId += 1;
+          }
+          axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
+          .then((res) => {
+            res.data;
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+
+          this.lastValue = null;
+          this.currentValue = parseFloat(this.currentValue);
+          this.checkOperator = false;
+
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+        break;
+        
+        case "-":
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+
+          if(this.lastValue === null){
+            this.Value = String(parseFloat(this.Value) - parseFloat(this.currentValue));
+          } else {
+            if(this.currentValue === null){
+              this.currentValue = "0";
+            }
+            this.Value = String(parseFloat(this.currentValue) - parseFloat(this.lastValue));
+          }
+
+          if(this.generateId === this.currentId){
+            this.generateId += 1;
+          }
+          axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
+          .then((res) => {
+            res.data;
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+
+          this.lastValue = null;
+          this.currentValue = parseFloat(this.currentValue);
+          this.checkOperator = false;
+
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+        break;
+
+        case "*":
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+
+          if(this.lastValue === null){
+            this.Value = String(parseFloat(this.Value) * parseFloat(this.currentValue));
+          } else {
+            if(this.currentValue === null){
+              this.currentValue = "0";
+            }
+            this.Value = String(parseFloat(this.currentValue) * parseFloat(this.lastValue));
+          }
+
+          if(this.generateId === this.currentId){
+            this.generateId += 1;
+          }
+          axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
+          .then((res) => {
+            res.data;
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+
+          this.lastValue = null;
+          this.currentValue = parseFloat(this.currentValue);
+          this.checkOperator = false;
+
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+        break;
+
+        case "/":
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+
+          if(this.lastValue === null){
+            this.Value = String(parseFloat(this.Value) / parseFloat(this.currentValue));
+          } else {
+            if(this.currentValue === null){
+              this.currentValue = "0";
+            }
+            this.Value = String(parseFloat(this.currentValue) / parseFloat(this.lastValue));
+          }
+
+          if(this.generateId === this.currentId){
+            this.generateId += 1;
+          }
+          axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
+          .then((res) => {
+            res.data;
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+
+          this.lastValue = null;
+          this.currentValue = parseFloat(this.currentValue);
+          this.checkOperator = false;
+
+          console.log("value: " + this.Value);
+          console.log("current: " + this.currentValue + "/" + "last: " + this.lastValue);
+        break;
+      }
+    },
+
+    undo(){
+      axios.get('http://localhost:4000/')
       .then((res) => {
-        res.data;
+        if(this.counter >= 0){
+          this.counter -= 1
+          this.Value = res.data.info[this.counter].dt;
+        }
+
+        console.log("nothing more");
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    },
+
+    redo(){
+      axios.get('http://localhost:4000/')
+      .then((res) => {
+        if(this.counter <= res.data.info.length){
+          this.counter += 1
+          this.Value = res.data.info[this.counter].dt;
+        }
       })
       .catch((e) => {
         console.log(e);
@@ -159,6 +364,24 @@ export default {
 
 .bg-orange:hover {
   background-color: rgb(216, 136, 17);
+}
+
+.bg-red {
+  background-color: rgb(121, 14, 28);
+  color: #fff;
+}
+
+.bg-red:hover {
+  background-color: rgb(189, 15, 15);
+}
+
+.bg-blue {
+  background-color: rgb(17, 51, 122);
+  color: #fff;
+}
+
+.bg-blue:hover {
+  background-color: rgb(23, 67, 161);
 }
 
 .bg-h:hover {

@@ -2,7 +2,9 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 // file
+const fs = require('fs');
 const config = require('./data.json');
+
 app.use(cors());
 app.use(express.json());
 
@@ -11,9 +13,22 @@ app.get("/", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-    console.log(req.body);
-    let j = req.body;
+    let js = req.body;
     
+    let jsJson = JSON.stringify(js);
+    
+    fs.readFile("data.json", "utf-8", (e, d) => {
+        if(e) throw(e);
+        
+        let dObj = JSON.parse(d);
+        dObj.info.push(js);
+        let nObj = JSON.stringify(dObj);
+
+        fs.writeFile("data.json", nObj, (e) => {
+            if(e) throw(e);
+        });
+    })
+
     res.json({
         status: "success"
     });
