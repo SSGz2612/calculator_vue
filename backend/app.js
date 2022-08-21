@@ -4,6 +4,7 @@ const cors = require('cors');
 // file
 const fs = require('fs');
 const config = require('./data.json');
+const port = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -34,6 +35,6 @@ app.post("/", (req, res) => {
     });
 });
 
-app.listen(4000, () => {
+app.listen(port, () => {
     console.log('listening on port 4000');
 });

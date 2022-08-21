@@ -55,7 +55,7 @@ export default {
   mounted(){
     axios.get('http://localhost:4000/')
     .then((res) => {
-      this.generateId = res.data.info[this.generateId].id;
+      this.generateId = res.data.info[res.data.info.length - 1].id;
       this.Value = res.data.info[0].dt;
     })
     .catch((e) => {
@@ -72,8 +72,8 @@ export default {
     clean(){
       let v = this.Value;
       this.Value = v.slice(0, -1);
-      this.currentValue = this.Value;
-      this.operator = "";
+      // this.currentValue = this.Value;
+      // this.operator = "";
     },
 
     digits(n){
@@ -82,7 +82,7 @@ export default {
         this.checkOperator = false;
       }
 
-      if(this.Value[0] === "0"){
+      if(this.Value === "0"){
         this.Value = n;
       } else {
         this.Value = this.Value + n;
@@ -107,7 +107,7 @@ export default {
 
     multiply(){
       this.currentValue = this.Value;
-      this.operator = "*";
+      this.operator = "x";
       this.checkOperator = true;
     },
 
@@ -162,7 +162,7 @@ export default {
           this.checkOperator = false;
         break;
 
-        case "*":
+        case "x":
           this.PrincipalValue = String(parseFloat(this.currentValue) * parseFloat(this.Value));
           this.Value = String(parseFloat(this.currentValue) * parseFloat(this.Value));
           
@@ -198,7 +198,7 @@ export default {
       }
     },
 
-    undo(){
+    redo(){
       axios.get('http://localhost:4000/')
       .then((res) => {
         if(this.counter > 0){
@@ -213,7 +213,7 @@ export default {
       });
     },
 
-    redo(){
+    undo(){
       axios.get('http://localhost:4000/')
       .then((res) => {
         if(this.counter < res.data.info.length - 1){
