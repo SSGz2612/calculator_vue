@@ -90,7 +90,9 @@ export default {
     },
 
     percent(){
-      this.Value = parseFloat(this.currentValue) / 100;
+      this.currentValue = this.Value;
+      this.operator = "%";
+      this.checkOperator = true;
     },
 
     dot(){
@@ -182,6 +184,23 @@ export default {
         case "/":
           this.PrincipalValue = String(parseFloat(this.currentValue) / parseFloat(this.Value));
           this.Value = String(parseFloat(this.currentValue) / parseFloat(this.Value));
+          
+          this.generateId += 1;
+          axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
+          .then((res) => {
+            res.data;
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+
+          this.operator = "";
+          this.checkOperator = false;
+        break;
+
+        case "%":
+          this.PrincipalValue = String(parseFloat(this.currentValue) * parseFloat(this.Value)) / 100;
+          this.Value = String(parseFloat(this.currentValue) * parseFloat(this.Value)) / 100;
           
           this.generateId += 1;
           axios.post('http://localhost:4000/', { "id": this.generateId, "dt": this.Value })
