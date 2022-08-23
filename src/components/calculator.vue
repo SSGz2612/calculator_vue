@@ -56,7 +56,6 @@ export default {
     axios.get('http://localhost:4000/')
     .then((res) => {
       this.generateId = res.data.info[res.data.info.length - 1].id;
-      console.log(res.data.info);
       this.Value = res.data.info[0].dt;
     })
     .catch((e) => {
@@ -64,16 +63,6 @@ export default {
     });
   },
   methods: {
-    genId(){
-      // for(let i = 0; i < dataTask.data.length; i++){
-      //   if(dataTask.data.find((n) => n.id === i)){
-      //       generatoriD += 1;
-      //   } else {
-      //       break;
-      //   }
-      // }
-    },
-
     cleanAll(){
       this.Value = "0";
       this.PrincipalValue = "0"
