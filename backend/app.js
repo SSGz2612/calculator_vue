@@ -9,14 +9,13 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
+// checking the get call
 app.get("/", (req, res) => {
     res.send(config);
 });
 
 app.post("/", (req, res) => {
     let js = req.body;
-    
-    let jsJson = JSON.stringify(js);
     
     fs.readFile("data.json", "utf-8", (e, d) => {
         if(e) throw(e);
